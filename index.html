@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Instagram Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        .post-image {
+            width: 100%;
+            height: 0;
+            padding-bottom: 100%; /* Creates a 1:1 aspect ratio */
+            position: relative;
+            overflow: hidden;
+        }
+        .post-image img, .post-image video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .story-image {
+            width: 100%;
+            height: 0;
+            padding-bottom: 177.78%; /* Creates a 9:16 aspect ratio */
+            position: relative;
+            overflow: hidden;
+        }
+        .story-image img, .story-image video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-white border-b border-gray-300 fixed top-0 w-full z-10">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="text-2xl font-bold">Instagram Clone</div>
+                <div class="hidden md:flex space-x-4 flex-1 justify-center">
+                    <input type="text" placeholder="Search" class="bg-gray-100 px-4 py-2 rounded-md w-64">
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-700"><i class="fas fa-home"></i></a>
+                    <a href="#" class="text-gray-700"><i class="fas fa-paper-plane"></i></a>
+                    <a href="#" class="text-gray-700" id="exploreBtn"><i class="fas fa-compass"></i></a>
+                    <a href="#" class="text-gray-700"><i class="fas fa-heart"></i></a>
+                    <a href="#" class="text-gray-700"><i class="fas fa-user-circle"></i></a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto mt-20 px-4 flex">
+        <div class="w-full md:w-2/3 md:pr-8">
+            <div id="stories" class="bg-white border border-gray-300 rounded-md p-4 mb-8 overflow-x-auto whitespace-nowrap">
+                <!-- Stories will be loaded here -->
+            </div>
+
+            <div id="posts" class="space-y-8">
+                <!-- Posts will be loaded here -->
+            </div>
+        </div>
+        <div class="hidden md:block w-1/3">
+            <div class="bg-white border border-gray-300 rounded-md p-4 sticky top-20">
+                 <div id="currentUserInfo" class="bg-white border border-gray-300 rounded-md p-4 sticky top-20">
+                <div class="text-sm text-gray-500 mb-4">Suggestions For You</div>
+                <div id="suggestions" class="space-y-4">
+                    <!-- Suggestions will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="exploreModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-20">
+        <div class="bg-white rounded-lg p-8 max-w-4xl w-full h-3/4 overflow-y-auto">
+            <h2 class="text-2xl font-bold mb-4">Explore</h2>
+            <div id="exploreContent" class="grid grid-cols-3 gap-4">
+                <!-- Explore content will be loaded here -->
+            </div>
+            <button id="closeExplore" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Close</button>
+        </div>
+    </div>
+
+    <div id="storyModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center hidden z-30">
+        <div class="w-full max-w-sm">
+            <div id="storyContent" class="relative story-image">
+                <!-- Story content will be loaded here -->
+            </div>
+            <button id="closeStory" class="absolute top-4 right-4 text-white text-2xl"><i class="fas fa-times"></i></button>
+            <button id="prevStory" class="absolute top-1/2 left-4 text-white text-2xl"><i class="fas fa-chevron-left"></i></button>
+            <button id="nextStory" class="absolute top-1/2 right-4 text-white text-2xl"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            currentUser: {
+                id: "user1",
+                username: "abra user",
+                fullName: "abra microsoft solutions",
+                profilePicture: "https://images.stockcake.com/public/5/1/c/51c00d1d-b01d-4608-aabd-341d2b512907_large/colorful-mountain-logo-stockcake.jpg"
+            },
+            users: [
+                {
+                    id: "user1",
+                    username: "currentuser",
+                    fullName: "Current User",
+                    profilePicture: "https://images.stockcake.com/public/5/e/a/5ea675c7-2a0c-4ddc-a08f-c6be5f55028e_large/serene-profile-view-stockcake.jpg"
+                },
+                {
+                    id: "user2",
+                    username: "johndoe",
+                    fullName: "John Doe",
+                    profilePicture: "https://images.stockcake.com/public/5/e/a/5ea675c7-2a0c-4ddc-a08f-c6be5f55028e_large/serene-profile-view-stockcake.jpg"
+                },
+                {
+                    id: "user3",
+                    username: "janedoe",
+                    fullName: "Jane Doe",
+                    profilePicture: "https://images.stockcake.com/public/1/2/6/12659625-a0aa-45fd-8f51-137da8f869f3_large/profile-in-contemplation-stockcake.jpg"
+                },
+                {
+                    id: "user4",
+                    username: "bobsmith",
+                    fullName: "Bob Smith",
+                    profilePicture: "https://images.stockcake.com/public/7/8/3/783d8f72-e822-4598-9132-542e5d7c3f34_large/vibrant-green-hair-stockcake.jpg"
+                },
+                {
+                    id: "user5",
+                    username: "alicejones",
+                    fullName: "Alice Jones",
+                    profilePicture: "/api/placeholder/50/50"
+                }
+            ],
+            stories: [
+                {
+                    id: "story1",
+                    userId: "user2",
+                    content: "https://images.stockcake.com/public/1/6/e/16ea9175-86c3-4ede-bc9d-1e9f570e05ea_large/zen-garden-tranquility-stockcake.jpg",
+                    type: "image"
+                },
+                {
+                    id: "story2",
+                    userId: "user3",
+                    content: "https://images.stockcake.com/public/2/3/a/23aba51c-49b7-4370-876b-b4aa33ecc008_large/gardener-with-flowers-stockcake.jpg",
+                    type: "image"
+                },
+                {
+                    id: "story3",
+                    userId: "user4",
+                    content: "https://images.stockcake.com/public/d/7/0/d70f6f7d-b9f0-4349-95ad-624aef54a575_large/beauty-store-activity-stockcake.jpg",
+                    type: "image"
+                },
+                {
+                    id: "story4",
+                    userId: "user5",
+                    content: "https://images.stockcake.com/public/0/5/5/0555901e-434f-497f-9e9e-f924c245dc48_large/colorful-cosmetic-shopping-stockcake.jpg",
+                    type: "image"
+                }
+            ],
+            posts: [
+                {
+                    id: "post1",
+                    userId: "user2",
+                    content: "https://images.stockcake.com/public/1/6/e/16ea9175-86c3-4ede-bc9d-1e9f570e05ea_large/zen-garden-tranquility-stockcake.jpg",
+                    type: "image",
+                    caption: "Beautiful day! #sunshine",
+                    likes: 42,
+                    comments: [
+                        { id: "comment1", userId: "user3", text: "Looks amazing!", timestamp: "2024-09-25T10:00:00Z" },
+                        { id: "comment2", userId: "user4", text: "Wish I was there!", timestamp: "2024-09-25T10:05:00Z" }
+                    ],
+                    location: "Sunny Beach",
+                    timestamp: "2024-09-25T09:30:00Z",
+                    isLiked: false
+                },
+                {
+                    id: "post2",
+                    userId: "user3",
+                    content: "https://images.stockcake.com/public/2/3/a/23aba51c-49b7-4370-876b-b4aa33ecc008_large/gardener-with-flowers-stockcake.jpg",
+                    type: "image",
+                    caption: "My new artwork #art #creative",
+                    likes: 28,
+                    comments: [
+                        { id: "comment3", userId: "user4", text: "Incredible work!", timestamp: "2024-09-25T11:00:00Z" },
+                        { id: "comment4", userId: "user5", text: "Love the colors!", timestamp: "2024-09-25T11:10:00Z" }
+                    ],
+                    location: "Art Studio",
+                    timestamp: "2024-09-25T10:45:00Z",
+                    isLiked: true
+                },
+                {
+                    id: "post3",
+                    userId: "user4",
+                    content: "https://images.stockcake.com/public/a/9/a/a9a3113d-edfc-4ded-a937-18c73b3d0b6b_large/vibrant-sunset-sky-stockcake.jpg",
+                    type: "image",
+                    caption: "Incredible sunset #nature",
+                    likes: 56,
+                    comments: [
+                        { id: "comment5", userId: "user2", text: "Wow, what a view!", timestamp: "2024-09-25T18:00:00Z" },
+                        { id: "comment6", userId: "user5", text: "Nature at its best!", timestamp: "2024-09-25T18:15:00Z" }
+                    ],
+                    location: "Sunset Point",
+                    timestamp: "2024-09-25T17:30:00Z",
+                    isLiked: false
+                }
+            ],
+            explore: [
+                { id: "explore1", content: "https://images.stockcake.com/public/5/e/a/5ea675c7-2a0c-4ddc-a08f-c6be5f55028e_large/serene-profile-view-stockcake.jpg", type: "image" },
+                { id: "explore2", content: "/api/placeholder/200/200", type: "image" },
+                { id: "explore3", content: "/api/placeholder/200/200", type: "image" },
+                { id: "explore4", content: "/api/placeholder/200/200", type: "image" },
+                { id: "explore5", content: "/api/placeholder/200/200", type: "image" },
+                { id: "explore6", content: "/api/placeholder/200/200", type: "image" }
+            ],
+            suggestions: ["user3", "user4", "user5"]
+        };
+
+        function getUserById(userId) {
+            return data.users.find(user => user.id === userId);
+        }
+
+        function createStoryElement(story) {
+            const user = getUserById(story.userId);
+            const storyElement = document.createElement('div');
+            storyElement.className = 'inline-block mr-4 text-center cursor-pointer';
+            storyElement.innerHTML = `
+                <div class="w-16 h-16 rounded-full border-2 border-pink-500 p-1">
+                    <img src="${user.profilePicture}" alt="${user.username}" class="w-full h-full rounded-full object-cover">
+                </div>
+                <span class="text-xs">${user.username}</span>
+            `;
+            storyElement.addEventListener('click', () => openStory(story.id));
+            return storyElement;
+        }
+
+        function createPostElement(post) {
+            const user = getUserById(post.userId);
+            const postElement = document.createElement('div');
+            postElement.className = 'bg-white border border-gray-300 rounded-md';
+            postElement.innerHTML = `
+                <div class="p-4 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="${user.profilePicture}" alt="${user.username}" class="w-8 h-8 rounded-full mr-2">
+                        <span class="font-semibold">${user.username}</span>
+                    </div>
+                    <span class="text-gray-500 text-sm">${post.location}</span>
+                </div>
+                <div class="post-image">
+                   ${post.type === 'video' 
+                        ? `<video src="${post.content}" controls class="w-full h-full object-cover"></video>`
+                        : `<img src="${post.content}" alt="Post content" class="w-full h-full object-cover">`
+                    }
+                </div>
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-4">
+                            <button class="text-2xl like-btn" data-post-id="${post.id}">
+                                <i class="far fa-heart${post.isLiked ? ' text-red-500' : ''}"></i>
+                            </button>
+                            <button class="text-2xl"><i class="far fa-comment"></i></button>
+                            <button class="text-2xl"><i class="far fa-paper-plane"></i></button>
+                        </div>
+                        <button class="text-2xl"><i class="far fa-bookmark"></i></button>
+                    </div>
+                    <div class="font-semibold mb-2"><span class="likes-count">${post.likes}</span> likes</div>
+                    <div><span class="font-semibold">${user.username}</span> ${post.caption}</div>
+                    <div class="mt-2 text-gray-600">
+                        ${post.comments.map(comment => {
+                            const commentUser = getUserById(comment.userId);
+                            return `<div><span class="font-semibold">${commentUser.username}</span> ${comment.text}</div>`;
+                        }).join('')}
+                    </div>
+                    <div class="text-gray-400 text-xs mt-2">${new Date(post.timestamp).toLocaleString()}</div>
+                    <div class="mt-2">
+                        <input type="text" placeholder="Add a comment..." class="w-full border-b border-gray-300 pb-1 focus:outline-none focus:border-gray-500">
+                    </div>
+                </div>
+            `;
+            return postElement;
+        }
+
+        function createSuggestionElement(userId) {
+            const user = getUserById(userId);
+            const suggestionElement = document.createElement('div');
+            suggestionElement.className = 'flex items-center justify-between';
+            suggestionElement.innerHTML = `
+                <div class="flex items-center">
+                    <img src="${user.profilePicture}" alt="${user.username}" class="w-8 h-8 rounded-full mr-2">
+                    <div>
+                        <div class="font-semibold text-sm">${user.username}</div>
+                        <div class="text-gray-500 text-xs">Suggested for you</div>
+                    </div>
+                </div>
+                <button class="text-blue-500 text-sm font-semibold">Follow</button>
+            `;
+            return suggestionElement;
+        }
+
+        function loadStories() {
+            const storiesContainer = document.getElementById('stories');
+            data.stories.forEach(story => {
+                const storyElement = createStoryElement(story);
+                storiesContainer.appendChild(storyElement);
+            });
+        }
+
+        function loadPosts() {
+            const postsContainer = document.getElementById('posts');
+            data.posts.forEach(post => {
+                const postElement = createPostElement(post);
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        function loadExplore() {
+            const exploreContent = document.getElementById('exploreContent');
+            exploreContent.innerHTML = '';
+            data.explore.forEach(item => {
+                const exploreItem = document.createElement('div');
+                exploreItem.className = 'relative group cursor-pointer';
+                exploreItem.innerHTML = `
+                    <img src="${item.content}" alt="Explore image" class="w-full h-48 object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <i class="fas fa-heart text-white mr-2"></i><span class="text-white">Like</span>
+                    </div>
+                `;
+                exploreContent.appendChild(exploreItem);
+            });
+        }
+
+        function loadSuggestions() {
+            const suggestionsContainer = document.getElementById('suggestions');
+            data.suggestions.forEach(userId => {
+                const suggestionElement = createSuggestionElement(userId);
+                suggestionsContainer.appendChild(suggestionElement);
+            });
+        }
+
+        let currentStoryIndex = 0;
+
+        function openStory(storyId) {
+            const storyModal = document.getElementById('storyModal');
+            currentStoryIndex = data.stories.findIndex(story => story.id === storyId);
+            updateStoryContent();
+            storyModal.classList.remove('hidden');
+        }
+
+        function updateStoryContent() {
+            const story = data.stories[currentStoryIndex];
+            const user = getUserById(story.userId);
+            const storyContent = document.getElementById('storyContent');
+            storyContent.innerHTML = `
+                ${story.type === 'video'
+                    ? `<video src="${story.content}" autoplay loop muted class="w-full h-full object-cover"></video>`
+                    : `<img src="${story.content}" alt="${user.username}'s story" class="w-full h-full object-cover">`
+                }
+                <div class="absolute top-4 left-4 flex items-center">
+                    <img src="${user.profilePicture}" alt="${user.username}" class="w-8 h-8 rounded-full mr-2">
+                    <span class="text-white font-semibold">${user.username}</span>
+                </div>
+            `;
+        }
+
+        function closeStory() {
+            const storyModal = document.getElementById('storyModal');
+            storyModal.classList.add('hidden');
+        }
+
+        function nextStory() {
+            currentStoryIndex = (currentStoryIndex + 1) % data.stories.length;
+            updateStoryContent();
+        }
+
+        function prevStory() {
+            currentStoryIndex = (currentStoryIndex - 1 + data.stories.length) % data.stories.length;
+            updateStoryContent();
+        }
+
+        function addNewPost() {
+            const newPost = {
+                id: `post${data.posts.length + 1}`,
+                userId: data.users[Math.floor(Math.random() * data.users.length)].id,
+                content: "/api/placeholder/1080/1080",
+                type: "image",
+                caption: "New post caption",
+                likes: Math.floor(Math.random() * 100),
+                comments: [],
+                location: "New Location",
+                timestamp: new Date().toISOString(),
+                isLiked: false
+            };
+            data.posts.push(newPost);
+            const postsContainer = document.getElementById('posts');
+            const postElement = createPostElement(newPost);
+            postsContainer.appendChild(postElement);
+            addLikeEventListener(postElement.querySelector('.like-btn'));
+        }
+
+        function addLikeEventListener(likeBtn) {
+            likeBtn.addEventListener('click', (e) => {
+                const postId = e.currentTarget.dataset.postId;
+                const post = data.posts.find(p => p.id === postId);
+                if (post) {
+                    post.isLiked = !post.isLiked;
+                    post.likes += post.isLiked ? 1 : -1;
+                    const likesCount = e.currentTarget.closest('.p-4').querySelector('.likes-count');
+                    likesCount.textContent = post.likes;
+                    e.currentTarget.querySelector('i').classList.toggle('text-red-500');
+                }
+            });
+        }
+ function loadCurrentUserInfo() {
+            const currentUserInfoContainer = document.getElementById('currentUserInfo');
+            currentUserInfoContainer.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <img src="${data.currentUser.profilePicture}" alt="${data.currentUser.username}" class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <div class="font-semibold">${data.currentUser.username}</div>
+                        <div class="text-gray-500 text-sm">${data.currentUser.fullName}</div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500 mb-4">Suggestions For You</div>
+                <div id="suggestions" class="space-y-4">
+                    <!-- Suggestions will be loaded here -->
+                </div>
+            `;
+        }
+        function displayFormatInfo() {
+            const infoElement = document.createElement('div');
+            infoElement.className = 'bg-white p-4 rounded-md shadow-md mb-4';
+            infoElement.innerHTML = `
+                <h2 class="text-lg font-bold mb-2">Supported Formats for Instagram Stories</h2>
+                <p>Dimensions: 1080px by 1920px (9:16 aspect ratio)</p>
+                <p>File formats: PNG, JPG, MP4, and MOV</p>
+            `;
+            document.querySelector('main').prepend(infoElement);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+loadCurrentUserInfo();
+            loadStories();
+            loadPosts();
+            loadExplore();
+            loadSuggestions();
+
+            // Like button functionality
+            document.querySelectorAll('.like-btn').forEach(addLikeEventListener);
+
+            // Explore modal functionality
+            const exploreBtn = document.getElementById('exploreBtn');
+            const exploreModal = document.getElementById('exploreModal');
+            const closeExplore = document.getElementById('closeExplore');
+
+            exploreBtn.addEventListener('click', () => {
+                exploreModal.classList.remove('hidden');
+            });
+
+            closeExplore.addEventListener('click', () => {
+                exploreModal.classList.add('hidden');
+            });
+
+            // Story modal functionality
+            const closeStoryBtn = document.getElementById('closeStory');
+            const prevStoryBtn = document.getElementById('prevStory');
+            const nextStoryBtn = document.getElementById('nextStory');
+
+            closeStoryBtn.addEventListener('click', closeStory);
+            prevStoryBtn.addEventListener('click', prevStory);
+            nextStoryBtn.addEventListener('click', nextStory);
+
+            // Infinite scrolling simulation
+            let isLoading = false;
+            window.addEventListener('scroll', () => {
+                if (!isLoading && (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                    isLoading = true;
+                    setTimeout(() => {
+                        addNewPost();
+                        isLoading = false;
+                    }, 500);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
